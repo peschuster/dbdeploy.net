@@ -88,7 +88,6 @@
         </ilmerge>
         <zip zipfile="${dist.dir}/dbdeploy.net.zip">
           <fileset basedir="${build.dir}" prefix="bin/">
-            <include name="dbproviders.xml" />
             <include name="MSBuild.Dbdeploy.Task.dll" />
             <include name="Dbdeploy.NAnt.dll" />
             <include name="Dbdeploy.Powershell.dll" />
@@ -98,9 +97,6 @@
           <fileset basedir="${build.dir}/combined" prefix="bin/">
             <include name="dbdeploy.exe" />
             <include name="Net.Sf.Dbdeploy.dll" />
-          </fileset>
-          <fileset basedir="${build.dir}/Resources" prefix="bin/Resources/">
-            <include name="**/*.vm" />
           </fileset>
           <fileset basedir="scripts" prefix="scripts/">
             <include name="**/*" />
