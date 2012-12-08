@@ -8,6 +8,5 @@ namespace Net.Sf.Dbdeploy.Appliers.NVelocityReplacements
     /// </summary>
     public class DbDeployAssemblyResourceLoader : AssemblyResourceLoader
     {
-
     }
 }

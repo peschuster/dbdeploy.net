@@ -68,18 +68,20 @@ namespace Net.Sf.Dbdeploy.Appliers
             {
                 ExtendedProperties props = new ExtendedProperties();
 
-                var assemblyName = this.GetType().Assembly.GetName().Name;
+                var assemblyName = typeof(TemplateBasedApplier).Assembly.GetName().Name;
 
                 ReplaceManagersWithDbDeployVersions(props, assemblyName);
 
                 if (this.templateDirectory == null)
                 {
                     props.AddProperty("resource.loader", "assembly");
-                    props.AddProperty("assembly.resource.loader.class",
-                                      // See the ; there? It will be replaced by , in the resource loader factory
-                                      // this is because if we add a property with a comma in the value, it will add *two* values to the property.
-                                      // oh joy.
-                                      typeof (DbDeployAssemblyResourceLoader).FullName + "; " + assemblyName);
+
+                    // The ";" will be replaced by "," in the resource loader factory.
+                    // This is because if we add a property with a comma in the value, it will add *two* values to the property.
+                    props.AddProperty(
+                        "assembly.resource.loader.class",
+                        typeof(DbDeployAssemblyResourceLoader).FullName + "; " + assemblyName);
+
                     props.AddProperty("assembly.resource.loader.assembly", assemblyName);
                     filename = "Net.Sf.Dbdeploy.Resources." + filename;
                 }
@@ -98,44 +100,38 @@ namespace Net.Sf.Dbdeploy.Appliers
             }
             catch (ResourceNotFoundException ex)
             {
-                string locationMessage;
-                if (templateDirectory == null)
-                {
-                    locationMessage = "";
-                }
-                else
-                {
-                    locationMessage = " at " + templateDirectory.FullName;
-                }
+                string locationMessage = templateDirectory == null 
+                    ? string.Empty 
+                    : (" at " + templateDirectory.FullName);
+
                 throw new UsageException(
-                    "Could not find template named " + filename + locationMessage + Environment.NewLine 
-                    + "Check that you have got the name of the database syntax correct.", 
+                    "Could not find template named " + filename + locationMessage + Environment.NewLine + "Check that you have got the name of the database syntax correct.",
                     ex);
             }
+        }
+
+        protected virtual string GetTemplateQualifier()
+        {
+            return "apply";
         }
 
         private static void ReplaceManagersWithDbDeployVersions(ExtendedProperties props, string assemblyName)
         {
             // our versions are straight subclasses of NVelocity's vanilla managers
             // EXCEPT ours will always be public, even when we ilmerge the assemblies
-            var addStringProperty = props.GetType().GetMethod("AddStringProperty", BindingFlags.NonPublic | BindingFlags.Instance);
+            var addStringProperty = typeof(ExtendedProperties).GetMethod("AddStringProperty", BindingFlags.NonPublic | BindingFlags.Instance);
 
             addStringProperty.Invoke(props, new object[]
                 {
                     "resource.manager.class",
-                    typeof (DbDeployResourceManager).FullName + "," + assemblyName
+                    typeof(DbDeployResourceManager).FullName + "," + assemblyName
                 });
 
             addStringProperty.Invoke(props, new object[]
                 {
                     "directive.manager",
-                    typeof (DbDeployDirectiveManager).FullName + "," + assemblyName
+                    typeof(DbDeployDirectiveManager).FullName + "," + assemblyName
                 });
-        }
-
-        protected virtual string GetTemplateQualifier()
-        {
-            return "apply";
         }
     }
 }
