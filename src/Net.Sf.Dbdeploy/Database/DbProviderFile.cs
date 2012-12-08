@@ -1,6 +1,4 @@
-using System;
 using System.IO;
-using System.Reflection;
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -26,32 +24,36 @@ namespace Net.Sf.Dbdeploy.Database
         public DbProviders LoadProviders()
         {
             Stream providerStream;
-            if (Path == null) providerStream = GetType().Assembly.GetManifestResourceStream(GetType(), ProviderFilename);
-            else if (!File.Exists(Path)) throw new FileNotFoundException("Could not load provider file from " + path);
-            else providerStream = File.OpenRead(Path);
 
-            using (providerStream)
-            using (XmlReader reader = new XmlTextReader(providerStream))
+            if (string.IsNullOrEmpty(this.Path))
             {
-                var serializer = new XmlSerializer(typeof(DbProviders));
-
-                return (DbProviders)serializer.Deserialize(reader);
+                providerStream = typeof(DbProviderFile).Assembly.GetManifestResourceStream(typeof(DbProviderFile), ProviderFilename);
             }
-        }
-        
-
-        private static string GetDefaultPath()
-        {
-            DirectoryInfo assemblyDirectory = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
-
-            string providerFilePath = System.IO.Path.Combine(assemblyDirectory.FullName, ProviderFilename);
-            
-            if (!File.Exists(providerFilePath))
+            else if (!File.Exists(this.Path))
             {
-                providerFilePath = System.IO.Path.Combine(Environment.CurrentDirectory, ProviderFilename);
+                throw new FileNotFoundException("Could not load provider file from " + path);
             }
-            
-            return providerFilePath;
+            else
+            {
+                providerStream = File.OpenRead(this.Path);
+            }
+
+            try
+            {
+                using (var reader = new XmlTextReader(providerStream))
+                {
+                    providerStream = null;
+
+                    var serializer = new XmlSerializer(typeof(DbProviders));
+
+                    return (DbProviders)serializer.Deserialize(reader);
+                }
+            }
+            finally
+            {
+                if (providerStream != null)
+                    providerStream.Dispose();
+            }
         }
     }
 }
