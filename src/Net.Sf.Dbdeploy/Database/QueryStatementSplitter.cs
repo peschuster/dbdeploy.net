@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Net.Sf.Dbdeploy.Database
 {
@@ -39,13 +40,19 @@ namespace Net.Sf.Dbdeploy.Database
             var statements = new List<string>();
             var currentSql = new StringBuilder();
 
-            string[] lines = input.Split("\r\n".ToCharArray());
+            string[] lines = Regex.Split(input, "\r\n|\r|\n");
+            bool insideText = false;
 
             foreach (string line in lines)
             {
-                string strippedLine = line.TrimEnd();
+                // Check wether line is inside of a text block
+                insideText ^= (line.Length - line.Replace("'", string.Empty).Length) % 2 == 1;
 
-                if (string.IsNullOrEmpty(strippedLine))
+                // Only trim none text lines.
+                string strippedLine = insideText ? line : line.TrimEnd();
+                
+                // Allow empty lines inside of text blocks.
+                if (!insideText && string.IsNullOrEmpty(strippedLine))
                     continue;
 
                 if (currentSql.Length != 0)

@@ -59,7 +59,7 @@ namespace Net.Sf.Dbdeploy.Database
         [Test]
         public void ShouldSplitStatementsOnASemicolonAtTheEndOfALineIgnoringWhitespace() 
         {
-            List<string> result = new List<string>(this.splitter.Split("SELECT 1;  \nSELECT 2;  "));
+            List<string> result = new List<string>(this.splitter.Split("SELECT 1;  \r\n\nSELECT 2;  "));
         
             Assert.Contains("SELECT 1", result);
             Assert.Contains("SELECT 2", result);
@@ -72,6 +72,18 @@ namespace Net.Sf.Dbdeploy.Database
         {
             Assert.Contains("SELECT" + Environment.NewLine + "1", this.splitter.Split("SELECT\n1").ToList());
             Assert.Contains("SELECT" + Environment.NewLine + "1", this.splitter.Split("SELECT\r\n1").ToList());
+        }
+
+        [Test]
+        public void ShouldLeaveTextBlocksAlone()
+        {
+            string text = "INSERT VALUES ('My" + Environment.NewLine + "   " + Environment.NewLine + "text')";
+
+            List<string> result = new List<string>(this.splitter.Split(text));
+
+            Assert.Contains(text, result);
+
+            Assert.AreEqual(1, result.Count);
         }
 
         [Test]
