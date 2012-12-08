@@ -24,15 +24,7 @@ namespace Net.Sf.Dbdeploy.Database
 
                 if (parameters != null)
                 {
-                    for (int i = 0; i < parameters.Length; i++)
-                    {
-                        IDbDataParameter parameterObject = command.CreateParameter();
-
-                        parameterObject.ParameterName = (i + 1).ToString();
-                        parameterObject.Value = parameters[i];
-
-                        command.Parameters.Add(parameterObject);
-                    }
+                    this.ApplyParameters(command, parameters);
                 }
 
                 return command.ExecuteReader();
@@ -47,15 +39,7 @@ namespace Net.Sf.Dbdeploy.Database
 
                 if (parameters != null)
                 {
-                    for (int i = 0; i < parameters.Length; i++)
-                    {
-                        IDbDataParameter parameterObject = command.CreateParameter();
-
-                        parameterObject.ParameterName = (i + 1).ToString();
-                        parameterObject.Value = parameters[i];
-
-                        command.Parameters.Add(parameterObject);
-                    }
+                    this.ApplyParameters(command, parameters);
                 }
 
                 command.ExecuteNonQuery();
@@ -109,6 +93,19 @@ namespace Net.Sf.Dbdeploy.Database
             }
 
             return command;
+        }
+
+        private void ApplyParameters(IDbCommand command, object[] parameters)
+        {
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                IDbDataParameter parameterObject = command.CreateParameter();
+
+                parameterObject.ParameterName = (i + 1).ToString();
+                parameterObject.Value = parameters[i];
+
+                command.Parameters.Add(parameterObject);
+            }
         }
     }
 }

@@ -25,16 +25,8 @@ namespace Net.Sf.Dbdeploy.Database
 
     	public virtual ICollection<int> GetAppliedChanges()
     	{
-    	    using (IDataReader reader = queryExecuter.ExecuteQuery(@"
-SELECT table_schema 
-FROM INFORMATION_SCHEMA.TABLES 
-WHERE TABLE_NAME = @1", changeLogTableName))
-            {
-                if(!reader.Read())
-                {
-                    throw new ChangelogTableDoesNotExistException(string.Format("No table found with name '{0}'.", changeLogTableName));
-                }
-            }
+            if (!this.ChangelogTableExists())
+                throw new ChangelogTableDoesNotExistException(string.Format("No table found with name '{0}'.", this.changeLogTableName));
 
             List<int> changeNumbers = new List<int>();
             try
@@ -84,6 +76,16 @@ WHERE TABLE_NAME = @1", changeLogTableName))
             catch (DbException e)
             {
                 throw new SchemaVersionTrackingException("Could not update change log because: " + e.Message, e);
+            }
+        }
+
+        public virtual bool ChangelogTableExists()
+        {
+            using (IDataReader reader = queryExecuter.ExecuteQuery(
+                @"SELECT table_schema FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = @1", 
+                this.changeLogTableName))
+            {
+                return reader.Read();
             }
         }
     }
