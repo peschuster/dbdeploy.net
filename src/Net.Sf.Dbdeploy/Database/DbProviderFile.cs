@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using System.Reflection;
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -25,18 +27,16 @@ namespace Net.Sf.Dbdeploy.Database
         {
             Stream providerStream;
 
-            if (string.IsNullOrEmpty(this.Path))
-            {
-                providerStream = typeof(DbProviderFile).Assembly.GetManifestResourceStream(typeof(DbProviderFile), ProviderFilename);
-            }
-            else if (!File.Exists(this.Path))
-            {
-                throw new FileNotFoundException("Could not load provider file from " + path);
-            }
-            else
-            {
-                providerStream = File.OpenRead(this.Path);
-            }
+            if (!string.IsNullOrEmpty(this.Path) && !File.Exists(this.Path))
+                throw new FileNotFoundException("Could not load provider file from " + this.Path);
+
+            string path = string.IsNullOrEmpty(this.Path)
+                ? GetDefaultPath()
+                : this.Path;
+
+            providerStream = File.Exists(path) 
+                ? File.OpenRead(path) 
+                : typeof(DbProviderFile).Assembly.GetManifestResourceStream(typeof(DbProviderFile), ProviderFilename);
 
             try
             {
@@ -54,6 +54,20 @@ namespace Net.Sf.Dbdeploy.Database
                 if (providerStream != null)
                     providerStream.Dispose();
             }
+        }
+
+        private static string GetDefaultPath()
+        {
+            DirectoryInfo assemblyDirectory = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
+
+            string providerFilePath = System.IO.Path.Combine(assemblyDirectory.FullName, ProviderFilename);
+
+            if (!File.Exists(providerFilePath))
+            {
+                providerFilePath = System.IO.Path.Combine(Environment.CurrentDirectory, ProviderFilename);
+            }
+
+            return providerFilePath;
         }
     }
 }
