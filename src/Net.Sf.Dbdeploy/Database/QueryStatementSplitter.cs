@@ -62,7 +62,8 @@ namespace Net.Sf.Dbdeploy.Database
 
                 currentSql.Append(strippedLine);
 
-                if (this.delimiterType.Matches(strippedLine, this.delimiter))
+                // don't split query inside of a text block
+                if (!insideText && this.delimiterType.Matches(strippedLine, this.delimiter))
                 {
                     statements.Add(currentSql.ToString(0, currentSql.Length - this.delimiter.Length));
 
